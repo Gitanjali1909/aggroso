@@ -1,99 +1,50 @@
-# Codebase Q&A Web App
+## Codebase Q&A Web App
 
-A full-stack coding assessment project that lets users ask questions about a pasted codebase or a GitHub repository URL.
+This project is a full-stack web application built as a coding assessment submission. The main idea of the app is to help users ask questions about a codebase by providing context from either pasted code or a GitHub repository link.
 
-## Features
+### What the App Does
 
-- React (Vite) frontend with pages:
-  - Home (`/`) for repo/codebase input + question form
-  - Status (`/status`) for backend health checks
-  - Result (`/result`) for AI answers and snippet evidence
-- Node.js + Express backend APIs:
-  - `GET /health`
-  - `POST /ask`
-- OpenAI integration with code-assistant system instruction
-- Basic GitHub repository content extraction (recursive, lightweight)
-- Last 10 Q&A entries saved in `localStorage`
-- Loading and error handling in UI
+* Users can enter a repository URL or paste code directly.
+* Users can ask questions about the code.
+* The backend tries to provide helpful answers using AI assistance when available.
+* If possible, the response may include:
 
-## Project Structure
+  * File path information
+  * Approximate line location
+  * Small snippet evidence from the code
 
-- `frontend/` React app
-- `backend/` Express API + AI/repo services
-- `README.md`, `AI_NOTES.md`, `ABOUTME.md`, `PROMPTS_USED.md`
+### Frontend
 
-## Prerequisites
+The frontend is built using React with Vite for faster development.
 
-- Node.js 18+
-- npm
-- OpenAI API key (optional but recommended)
+Pages include:
 
-## Setup
+* Home page – Input repository or codebase and ask questions.
+* Status page – Backend health check.
+* Result page – Display AI response and code evidence.
 
-1. Install dependencies:
+The UI focuses on simplicity, loading feedback, and basic error handling.
 
-```bash
-npm run install:all
-```
+### Backend
 
-2. Configure environment files:
+The backend is built using Node.js and Express.
 
-- Copy `backend/.env.example` to `backend/.env`
-- Copy `frontend/.env.example` to `frontend/.env`
-- Set `OPENAI_API_KEY` in `backend/.env`
+It provides two main APIs:
 
-3. Run backend (Terminal 1):
+* Health check endpoint to verify server status.
+* Question answering endpoint that processes context and returns responses.
 
-```bash
-npm run dev:backend
-```
+### Repository Handling
 
-4. Run frontend (Terminal 2):
+If a GitHub repository link is provided, the backend performs a lightweight recursive scan to extract readable code files within safe size limits.
 
-```bash
-npm run dev:frontend
-```
+The project does not use complex indexing or advanced search mechanisms. The focus is on keeping the implementation practical for assessment purposes.
 
-5. Open the frontend URL from Vite (typically `http://localhost:5173`).
+### AI Usage
 
-## API Contracts
+AI assistance is used as a development helper.
 
-### `GET /health`
+* If an API key is available, the application can generate answers using a language model.
+* If AI service is not configured, the backend safely returns a fallback response.
 
-Returns status metadata.
-
-### `POST /ask`
-
-Request body:
-
-```json
-{
-  "repoUrl": "https://github.com/owner/repo",
-  "codebase": "optional pasted code",
-  "question": "How does auth work?"
-}
-```
-
-Response body:
-
-```json
-{
-  "question": "...",
-  "answer": "...",
-  "citations": [
-    {
-      "filePath": "src/auth.js",
-      "lineStart": 12,
-      "lineEnd": 31,
-      "snippet": "..."
-    }
-  ],
-  "model": "gpt-4.1-mini",
-  "sourceType": "github"
-}
-```
-
-## Notes
-
-- If `OPENAI_API_KEY` is missing, backend returns a simulated fallback answer.
-- GitHub extraction is intentionally simple and bounded for assessment scope.
+The goal is to maintain a working application flow rather than relying completely on AI-generated output.

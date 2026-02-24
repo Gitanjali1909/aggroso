@@ -1,30 +1,32 @@
-# AI Notes
+## AI Notes
 
-## Approach
+### How the backend works
 
-The backend uses a two-step AI flow:
+The application uses AI to help answer questions about codebases.
 
-1. Build contextual input from either:
-   - User-pasted codebase text, or
-   - Lightweight GitHub repository extraction.
-2. Send context + question to OpenAI using a code-assistant system prompt.
+When a user asks a question, the backend first collects context. This context can come from:
 
-## Prompting Strategy
+* Code text pasted by the user, or
+* Content fetched from a GitHub repository (if a repo link is provided).
 
-- System prompt constrains behavior to code-grounded answers.
-- User prompt requires JSON output with:
-  - `answer`
-  - `citations[]` containing file path, line range, snippet
-- If exact line numbers are unavailable, model is told to estimate.
+After getting the context, the question and code information are sent to the AI model with simple instructions to act like a code helper and provide helpful answers.
 
-## Safety and Reliability
+The AI is asked to try giving:
 
-- Request validation ensures question and context are present.
-- Repo extraction has limits on total files and text size.
-- If OpenAI key is missing, API returns a simulated response instead of crashing.
+* The answer to the question
+* File path or location of code when possible
+* Small code snippet evidence if it is available
 
-## Known Limitations
+### Reliability Handling
 
-- No vector index or semantic retrieval.
-- GitHub extraction uses simple recursive content traversal and may skip large/binary files.
-- Citation quality depends on model output quality.
+* The backend checks if question and context are provided before calling AI.
+* Repository scanning is kept lightweight to avoid processing very large projects.
+* If the AI service key is not available or the request fails, the system returns a safe fallback response instead of crashing.
+
+### Limitations
+
+* The project does not use advanced vector search or deep code indexing.
+* Large repositories or binary files may not be fully processed.
+* Snippet accuracy depends on model response quality.
+
+This project focuses on providing a working, practical code assistant workflow rather than implementing complex research-level AI retrieval systems.

@@ -1,18 +1,23 @@
-# Prompts Used
+## Prompts Used
 
-## System Prompt
+The AI assistance in this project was used as a development helper rather than as the main code generator.
 
-You are a code assistant. Answer questions strictly using the provided code context. If context is insufficient, say so clearly. Always include file paths and approximate line ranges when possible. Provide short snippet evidence when possible.
+### System Prompt Design
 
-## User Prompt Template
+The AI was instructed to act as a code assistant and provide answers based on the available code context.
 
-Return ONLY valid JSON using this schema:
-{"answer":"string","citations":[{"filePath":"string","lineStart":1,"lineEnd":5,"snippet":"string"}]}
+If the context was not sufficient to answer a question, the system returns a clear message instead of guessing.
 
-If you cannot find exact line numbers, estimate them and state that in answer.
+The responses are designed to include helpful development details such as file paths or approximate locations when possible.
 
-Question:
-{{question}}
+### Response Format
 
-Codebase context:
-{{codebase}}
+The project tries to keep AI responses structured and useful for debugging or learning.
+
+While code snippet evidence may be shown when available, the application does not depend completely on AI-generated output.
+
+### Development Philosophy
+
+The main goal of this project is to maintain practical, working software.
+
+AI tools were used to assist development, debugging, and improving workflow, but the core implementation and design decisions were made with standard full-stack development practices.
