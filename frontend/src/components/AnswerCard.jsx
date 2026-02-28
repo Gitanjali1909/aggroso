@@ -1,4 +1,8 @@
+import { useTypewriter } from "../hooks/useTypewriter";
+
 function AnswerCard({ result }) {
+  const typedAnswer = useTypewriter(result?.answer, 18);
+
   if (!result) {
     return <p className="muted">No result to show.</p>;
   }
@@ -7,7 +11,7 @@ function AnswerCard({ result }) {
     <section className="card answer-card">
       <h2>Answer</h2>
       <p className="question"><strong>Question:</strong> {result.question}</p>
-      <p className="answer-text">{result.answer}</p>
+      <p className="answer-text">{typedAnswer}</p>
 
       <div className="meta-row">
         <span>Model: {result.model || "n/a"}</span>
