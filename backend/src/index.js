@@ -3,6 +3,14 @@ import express from "express";
 import cors from "cors";
 import { askCodeQuestion } from "./services/openaiService.js";
 import { extractCodebaseFromRepo } from "./services/repoService.js";
+import rateLimit from "express-rate-limit";
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+});
+
+app.use(limiter);
 
 const app = express();
 const port = Number(process.env.PORT || 3001);
