@@ -9,6 +9,15 @@ function tryParseJson(value) {
   }
 }
 
+function trimContext(codebase) {
+  const MAX_CONTEXT_LENGTH = 8000; // simple safeguard
+  if (!codebase) return "";
+
+  return codebase.length > MAX_CONTEXT_LENGTH
+    ? codebase.slice(0, MAX_CONTEXT_LENGTH)
+    : codebase;
+}
+
 export async function askCodeQuestion({ codebase, question }) {
   try {
     const apiKey = process.env.OPENAI_API_KEY;
@@ -23,6 +32,8 @@ export async function askCodeQuestion({ codebase, question }) {
     }
 
     const client = new OpenAI({ apiKey });
+
+    const trimmedContext = trimContext(codebase);
 
     const prompt = `
 Return ONLY valid JSON.
@@ -46,27 +57,37 @@ Question:
 ${question}
 
 Codebase context:
-${codebase}
+${trimmedContext}
 `;
 
     const model = process.env.OPENAI_MODEL || "gpt-4o-mini";
 
-    const response = await client.chat.completions.create({
-      model,
-      messages: [
-        {
-          role: "system",
-          content: systemPrompt
-        },
-        {
-          role: "user",
-          content: prompt
-        }
-      ]
-    });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000); // 15s timeout
+
+    const response = await client.chat.completions.create(
+      {
+        model,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: prompt }
+        ]
+      },
+      { signal: controller.signal }
+    );
+
+    clearTimeout(timeout);
 
     const outputText =
       response?.choices?.[0]?.message?.content?.trim() || "";
+
+    if (!outputText) {
+      return {
+        answer: "Model returned an empty response.",
+        citations: [],
+        model
+      };
+    }
 
     const parsed = tryParseJson(outputText);
 
@@ -81,11 +102,21 @@ ${codebase}
     }
 
     return {
-      answer: outputText || "Model returned an empty response.",
+      answer: outputText,
       citations: [],
       model
     };
+
   } catch (error) {
+    if (error.name === "AbortError") {
+      console.error("OPENAI_TIMEOUT_ERROR");
+      return {
+        answer: "AI request timed out. Please try again.",
+        citations: [],
+        model: "timeout"
+      };
+    }
+
     console.error("ASK_CODE_QUESTION_ERROR:", error.message);
 
     return {
