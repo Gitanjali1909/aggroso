@@ -6,9 +6,12 @@ function ResultPage() {
   const result = location.state?.result;
 
   return (
-    <div className="result-layout">
+    <div className="space-y-4">
       <AnswerCard result={result} />
-      <Link className="back-link" to="/">
+      <Link
+        className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-indigo-200 hover:text-indigo-700"
+        to="/"
+      >
         Ask another question
       </Link>
     </div>
