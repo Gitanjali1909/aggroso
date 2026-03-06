@@ -1,60 +1,94 @@
-## Codebase Q&A Web App
+Codebase Q&A Web App
 
-This project is a full-stack web application built as a coding assessment submission. The main idea of the app is to help users ask questions about a codebase by providing context from either pasted code or a GitHub repository link.
+A full-stack AI-powered web application that allows users to ask questions about a codebase and receive contextual answers derived from the repository or pasted code.
 
-### What the App Does
+The goal of the project is to explore how AI can assist developers in understanding unfamiliar codebases quickly by surfacing relevant context, snippets, and explanations.
 
-* Users can enter a repository URL or paste code directly.
-* Users can ask questions about the code.
-* The backend tries to provide helpful answers using AI assistance when available.
-* If possible, the response may include:
+Key Features
 
-  * File path information
-  * Approximate line location
-  * Small snippet evidence from the code
+• Ask questions about a codebase using natural language
+• Provide context through either a GitHub repository link or pasted code
+• AI-assisted responses with contextual explanations
+• Code snippet evidence when relevant
+• Simulated streaming response UI for a real-time feel
+• Error boundaries for better frontend stability
+• Structured backend logging for better debugging
+• Responsive and minimal developer-focused interface
 
-### Frontend
+How It Works
 
-The frontend is built using React with Vite for faster development.
+A user provides either:
 
-Pages include:
+A GitHub repository URL
 
-* Home page – Input repository or codebase and ask questions.
-* Status page – Backend health check.
-* Result page – Display AI response and code evidence.
+Or pasted code snippets
 
-The UI focuses on simplicity, loading feedback, and basic error handling.
+The backend extracts readable code files and prepares contextual input.
 
-### Backend
+The user asks a question about the codebase.
 
-The backend is built using Node.js and Express.
+The application sends the context and question to an AI model (if configured).
 
-It provides two main APIs:
+The response is returned along with helpful references such as:
 
-* Health check endpoint to verify server status.
-* Question answering endpoint that processes context and returns responses.
+File paths
 
-### Repository Handling
+Approximate locations in code
 
-If a GitHub repository link is provided, the backend performs a lightweight recursive scan to extract readable code files within safe size limits.
+Relevant snippets
 
-The project does not use complex indexing or advanced search mechanisms. The focus is on keeping the implementation practical for assessment purposes.
+Tech Stack
+Frontend
 
-### AI Usage
+React
 
-AI assistance is used as a development helper.
+Vite
 
-* If an API key is available, the application can generate answers using a language model.
-* If AI service is not configured, the backend safely returns a fallback response.
+Tailwind CSS
 
-The goal is to maintain a working application flow rather than relying completely on AI-generated output.
+Custom streaming UI hook (useTypewriter)
 
-### Engineering Improvements
+Error Boundary implementation for crash handling
 
-This project includes a few practical engineering upgrades to make it feel more production-ready while staying simple:
+Backend
 
-* Request timeout (frontend): API calls use `AbortController` and are cancelled after 15 seconds with a user-friendly timeout message.
-* Rate limiting (backend): A lightweight in-memory middleware limits each IP to 10 requests per minute and returns HTTP 429 when exceeded.
-* Skeleton loader (frontend): A reusable Tailwind pulse skeleton appears while AI answers are loading, then is replaced by the final response.
-* Structured logging (backend): Request metadata and errors are logged in a consistent structured format for easier debugging.
-* Error boundary (frontend): React Error Boundary protects the app from full UI crashes and shows a fallback screen when runtime errors occur.
+Node.js
+
+Express
+
+Structured request logging
+
+Lightweight repository scanning
+
+Repository Processing
+
+When a GitHub repository link is provided, the backend performs a lightweight recursive scan to extract readable code files.
+
+Safety constraints are applied:
+
+File size limits
+
+Readable text files only
+
+No heavy indexing or vector databases
+
+This keeps the implementation simple, efficient, and suitable for smaller repositories.
+
+AI Integration
+
+AI is used to generate contextual answers based on the extracted code.
+
+If an API key is configured, the backend can query a language model to generate responses.
+If AI services are unavailable, the application gracefully returns a fallback response to maintain the user flow.
+
+Project Goals
+
+This project focuses on:
+
+Building a practical AI-assisted developer tool
+
+Demonstrating full-stack integration
+
+Designing a clean developer-focused UI
+
+Implementing production-style improvements such as structured logging, error boundaries, and progressive response rendering.
