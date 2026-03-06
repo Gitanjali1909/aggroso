@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchHealth } from "../api/client";
+import { fetchHealth } from "../utils/api";
 
 function StatusPage() {
   const [health, setHealth] = useState(null);

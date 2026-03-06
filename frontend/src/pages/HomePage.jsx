@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { askQuestion } from "../api/client";
 import HistoryList from "../components/HistoryList";
 
 const HISTORY_KEY = "qa_history";
@@ -15,54 +14,46 @@ function loadHistory() {
   }
 }
 
-function saveHistory(items) {
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(items.slice(0, 10)));
-}
-
 function HomePage() {
   const navigate = useNavigate();
   const [repoUrl, setRepoUrl] = useState("");
   const [codebase, setCodebase] = useState("");
   const [question, setQuestion] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [history, setHistory] = useState(() => loadHistory());
+  const [history] = useState(() => loadHistory());
 
-  const canSubmit = useMemo(() => question.trim() && (repoUrl.trim() || codebase.trim()), [question, repoUrl, codebase]);
+  const canSubmit = useMemo(
+    () => Boolean(question.trim() && (repoUrl.trim() || codebase.trim())),
+    [question, repoUrl, codebase]
+  );
 
   const onSubmit = async (event) => {
     event.preventDefault();
     setError("");
 
-    if (!canSubmit) {
-      setError("Provide a question plus either repo URL or codebase text.");
+    const trimmedQuestion = question.trim();
+    const trimmedRepoUrl = repoUrl.trim();
+    const trimmedCodebase = codebase.trim();
+
+    if (!trimmedQuestion) {
+      setError("Question is required.");
       return;
     }
 
-    setLoading(true);
-    try {
-      const result = await askQuestion({
-        repoUrl: repoUrl.trim() || undefined,
-        codebase: codebase.trim() || undefined,
-        question: question.trim(),
-      });
-
-      const nextItem = {
-        id: crypto.randomUUID(),
-        createdAt: new Date().toISOString(),
-        ...result,
-      };
-
-      const nextHistory = [nextItem, ...history].slice(0, 10);
-      setHistory(nextHistory);
-      saveHistory(nextHistory);
-
-      navigate("/result", { state: { result: nextItem } });
-    } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "Failed to ask question");
-    } finally {
-      setLoading(false);
+    if (!trimmedRepoUrl && !trimmedCodebase) {
+      setError("Provide either a repository URL or pasted codebase text.");
+      return;
     }
+
+    navigate("/result", {
+      state: {
+        payload: {
+          repoUrl: trimmedRepoUrl || undefined,
+          codebase: trimmedCodebase || undefined,
+          question: trimmedQuestion,
+        },
+      },
+    });
   };
 
   return (
@@ -111,21 +102,12 @@ function HomePage() {
             <p className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>
           ) : null}
 
-          {loading ? (
-            <div className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600">
-              <span className="inline-block h-2.5 w-2.5 animate-pulse rounded-full bg-indigo-500" />
-              <span className="inline-block h-2.5 w-2.5 animate-pulse rounded-full bg-indigo-400 [animation-delay:120ms]" />
-              <span className="inline-block h-2.5 w-2.5 animate-pulse rounded-full bg-indigo-300 [animation-delay:240ms]" />
-              <span>Analyzing code context...</span>
-            </div>
-          ) : null}
-
           <button
             type="submit"
-            disabled={!canSubmit || loading}
+            disabled={!canSubmit}
             className="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {loading ? "Analyzing..." : "Ask AI"}
+            Ask AI
           </button>
         </form>
       </section>

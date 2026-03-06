@@ -48,3 +48,13 @@ AI assistance is used as a development helper.
 * If AI service is not configured, the backend safely returns a fallback response.
 
 The goal is to maintain a working application flow rather than relying completely on AI-generated output.
+
+### Engineering Improvements
+
+This project includes a few practical engineering upgrades to make it feel more production-ready while staying simple:
+
+* Request timeout (frontend): API calls use `AbortController` and are cancelled after 15 seconds with a user-friendly timeout message.
+* Rate limiting (backend): A lightweight in-memory middleware limits each IP to 10 requests per minute and returns HTTP 429 when exceeded.
+* Skeleton loader (frontend): A reusable Tailwind pulse skeleton appears while AI answers are loading, then is replaced by the final response.
+* Structured logging (backend): Request metadata and errors are logged in a consistent structured format for easier debugging.
+* Error boundary (frontend): React Error Boundary protects the app from full UI crashes and shows a fallback screen when runtime errors occur.
