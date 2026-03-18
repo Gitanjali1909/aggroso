@@ -3,7 +3,6 @@ import HomePage from "./pages/HomePage";
 import StatusPage from "./pages/StatusPage";
 import ResultPage from "./pages/ResultPage";
 import AppHeader from "./components/AppHeader";
-import AppFooter from "./components/AppFooter";
 
 function App() {
   return (
