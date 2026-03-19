@@ -12,8 +12,17 @@ const port = Number(process.env.PORT || 3001);
 
 app.use(cors());
 app.use(express.json({ limit: "2mb" }));
-app.use(timeout("15s"));
+app.use(timeout("30s"));
 app.use(rateLimitMiddleware);
+
+// 🛑 IMPORTANT: stop processing if request already timed out
+function haltOnTimedout(req, res, next) {
+  if (!req.timedout) next();
+}
+
+app.use(haltOnTimedout);
+
+// ---------------- LOGGING ----------------
 
 function toLogValue(value) {
   if (value === undefined || value === null || value === "") {
@@ -50,18 +59,21 @@ function logEvent(level, route, metadata = {}) {
   }
 }
 
+// ---------------- ROUTES ----------------
+
 app.get("/health", (_req, res) => {
-  const timestamp = new Date().toISOString();
   logEvent("info", "GET /health", { Status: "ok" });
 
   res.json({
     status: "ok",
     service: "codebase-qa-backend",
-    timestamp,
+    timestamp: new Date().toISOString(),
   });
 });
 
 app.post("/ask", async (req, res) => {
+  if (req.timedout) return; // 🛑 prevent crash
+
   const { codebase, question, repoUrl } = req.body || {};
 
   const questionLength =
@@ -76,44 +88,48 @@ app.post("/ask", async (req, res) => {
   });
 
   try {
+    // 🟡 Validate question
     if (!question || typeof question !== "string") {
-      logEvent("error", "POST /ask", {
-        QuestionLength: questionLength,
-        RepoUrl: hasRepoUrl,
-        Error: "question is required",
-      });
-
       return res.status(400).json({
         error: "question is required",
       });
     }
 
+    // 🟡 Safe codebase
     let resolvedCodebase =
       typeof codebase === "string" ? codebase.trim() : "";
 
+    // 🟡 Extract repo (safe)
     if (!resolvedCodebase && hasRepoUrl) {
-      resolvedCodebase = await extractCodebaseFromRepo(
-        repoUrl.trim()
-      );
+      try {
+        resolvedCodebase = await extractCodebaseFromRepo(
+          repoUrl.trim()
+        );
+      } catch (repoError) {
+        logEvent("error", "REPO_EXTRACTION", {
+          Error: repoError.message,
+        });
+
+        return res.status(500).json({
+          error: "Failed to fetch repository",
+        });
+      }
     }
 
     if (!resolvedCodebase) {
-      logEvent("error", "POST /ask", {
-        QuestionLength: questionLength,
-        RepoUrl: hasRepoUrl,
-        Error: "missing codebase and repoUrl",
-      });
-
       return res.status(400).json({
         error:
           "Provide either codebase text or a repository URL.",
       });
     }
 
+    // 🟡 Call AI safely
     const aiResult = await askCodeQuestion({
       codebase: resolvedCodebase,
       question,
     });
+
+    if (req.timedout) return; // 🛑 prevent sending after timeout
 
     logEvent("info", "POST /ask", {
       QuestionLength: questionLength,
@@ -131,28 +147,23 @@ app.post("/ask", async (req, res) => {
         : "unknown",
     });
   } catch (error) {
+    if (req.timedout) return;
+
     logEvent("error", "POST /ask", {
-      QuestionLength: questionLength,
-      RepoUrl: hasRepoUrl,
-      Error:
-        error instanceof Error
-          ? error.message
-          : String(error),
+      Error: error?.message || "unknown",
     });
 
     return res.status(500).json({
       error: "Failed to process request",
-      details:
-        error instanceof Error
-          ? error.message
-          : String(error),
+      details: error?.message || "unknown error",
     });
   }
 });
 
+// ---------------- SERVER ----------------
 
 app.listen(port, () => {
   logEvent("info", "SERVER", {
-    Message: `Backend listening on http://localhost:${port}`,
+    Message: `Backend running on port ${port}`,
   });
 });

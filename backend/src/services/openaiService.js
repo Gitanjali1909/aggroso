@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import Groq from "groq-sdk";
 import { systemPrompt } from "../prompts/systemPrompt.js";
 
 function tryParseJson(value) {
@@ -10,7 +10,7 @@ function tryParseJson(value) {
 }
 
 function trimContext(codebase) {
-  const MAX_CONTEXT_LENGTH = 8000; // simple safeguard
+  const MAX_CONTEXT_LENGTH = 2000;
   if (!codebase) return "";
 
   return codebase.length > MAX_CONTEXT_LENGTH
@@ -20,20 +20,22 @@ function trimContext(codebase) {
 
 export async function askCodeQuestion({ codebase, question }) {
   try {
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = process.env.GROQ_API_KEY;
 
+    // ✅ Fallback if no API key
     if (!apiKey) {
       return {
         answer:
-          "OpenAI API key is not configured. Set OPENAI_API_KEY in backend/.env.",
+          "AI service is not configured. Set GROQ_API_KEY in backend/.env.",
         citations: [],
         model: "simulation"
       };
     }
 
-    const client = new OpenAI({ apiKey });
+    const client = new Groq({ apiKey });
 
-    const trimmedContext = trimContext(codebase);
+    const safeCodebase = codebase || "";
+const trimmedContext = trimContext(safeCodebase);
 
     const prompt = `
 Return ONLY valid JSON.
@@ -60,10 +62,11 @@ Codebase context:
 ${trimmedContext}
 `;
 
-    const model = process.env.OPENAI_MODEL || "gpt-4o-mini";
+    const model = "llama3-8b-8192";
 
+    // ✅ Timeout control
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15000); // 15s timeout
+    const timeout = setTimeout(() => controller.abort(), 25000);
 
     const response = await client.chat.completions.create(
       {
@@ -91,6 +94,7 @@ ${trimmedContext}
 
     const parsed = tryParseJson(outputText);
 
+    // ✅ If valid JSON
     if (parsed && typeof parsed.answer === "string") {
       return {
         answer: parsed.answer,
@@ -101,6 +105,7 @@ ${trimmedContext}
       };
     }
 
+    // ✅ Fallback if not JSON
     return {
       answer: outputText,
       citations: [],
@@ -109,7 +114,7 @@ ${trimmedContext}
 
   } catch (error) {
     if (error.name === "AbortError") {
-      console.error("OPENAI_TIMEOUT_ERROR");
+      console.error("GROQ_TIMEOUT_ERROR");
       return {
         answer: "AI request timed out. Please try again.",
         citations: [],
