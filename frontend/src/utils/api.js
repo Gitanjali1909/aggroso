@@ -1,5 +1,5 @@
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "https://aggroso-25mu.onrender.com";
+  import.meta.env.VITE_API_BASE_URL || "https://code-insight-ai.onrender.com/";
 
 const REQUEST_TIMEOUT_MS = 15_000;
 
